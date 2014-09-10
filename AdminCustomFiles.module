@@ -3,10 +3,9 @@
 /**
  * Admin Custom Files
  *
- *
- * This module can add custom scripts and files to the admin.
- * You can add content by simply putting a [tplname].html or [tplname].md file in /templates/notes/
- *
+ * This module enables you to add custom scripts and files to the admin.
+ * 
+ * Copyright (C) 2014 by Martijn Geerts
  *
  * ProcessWire 2.x
  * Copyright (C) 2010 by Ryan Cramer
@@ -40,21 +39,21 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
 
 
 
-    // (string) Gobal files without Process dependencies
+    // (bool) Current Page process is selected (Module configuration, Enable for process)
     private $filter = null;
-    // (string) Name of the current admin process
+    // (string) Name of the current Page process
     private $process_name = null;
     // (string) Name of the template to edit if the process is ProcessPageEdit
     private $template_name = null;
-    // (array) Converted textarea Dependencies to array
+    // (array) Converted textarea Dependencies to array (Module configuration)
     private $dependency_array = array();
-    // (array) Gobal files without Process dependencies
+    // (array) Gobal files without Process dependencies (i.e site/scripts/lib/library.js)
     private $global_files = array();
-    // (array) Gobal files with Process dependencies
+    // (array) Gobal files with Process dependencies (i.e site/scripts/lib/jquery-plug-in.js)
     private $dependency_files = array();
-    // (array) AdminCustomFiles depending on admin process
+    // (array) AdminCustomFiles depending on admin process (i.e. ProcessPageEdit.js)
     private $process_files = array();
-    // (array) On ProcessPageEdit process the edited page template file
+    // (array) On ProcessPageEdit process (template-name.css or template-name.js)
     private $template_file = array();
 
 
