@@ -4,7 +4,7 @@
  * Admin Custom Files
  *
  * This module enables you to add custom scripts and files to the admin.
- * 
+ *
  * Copyright (C) 2014 by Martijn Geerts
  *
  * ProcessWire 2.x
@@ -116,7 +116,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
         // Current processname
         $this->process_name = (string) $this->page->process;
         // Processes enabled ?
-        $this->filter = in_array($this->process_name, $this->process_filter);
+        $this->filter = is_array($this->process_filter) ? in_array($this->process_name, $this->process_filter) : false;
         // All dependencies
         $this->dependency_array = $this->explode($this->dependencies);
         // Is the ProcessPageEdit && are the filters set
@@ -198,6 +198,34 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
             } else if (strpos($file, '.js') !== false) {
                 $this->config->scripts->append($file);
             }
+        }
+    }
+
+
+
+    /**
+     * Create the AdminCustomFiles folder
+     *
+     */
+
+    public function ___install() {
+        $AdminCustomFiles = $this->config->paths->templates . self::$factorySettings['files_folder'];
+        if (!is_dir($AdminCustomFiles)) {
+            wireMkdir($AdminCustomFiles);
+            $this->message(sprintf($this->_("We created the folder /site/templates/%s/"), self::$factorySettings['files_folder']));
+        }
+    }
+
+
+
+    /**
+     * Create the AdminCustomFiles folder
+     *
+     */
+
+    public function ___uninstall() {
+        if (is_dir($this->config->paths->templates . $this->files_folder)) {
+            $this->error(sprintf($this->_("You may remove the folder /site/templates/%s/ manually."), $this->files_folder));
         }
     }
 
