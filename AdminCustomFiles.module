@@ -43,6 +43,8 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
     private $filter = null;
     // (string) Name of the current Page process
     private $process_name = null;
+    // (Page) Page object id process is ProcessPageEdit
+    private $edit_page = null;
     // (string) Name of the template to edit if the process is ProcessPageEdit
     private $template_name = null;
     // (array) Converted textarea Dependencies to array (Module configuration)
@@ -113,18 +115,23 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
      */
 
     public function ready() {
+
         // Current processname
         $this->process_name = (string) $this->page->process;
         // Processes enabled ?
         $this->filter = is_array($this->process_filter) ? in_array($this->process_name, $this->process_filter) : false;
+        // Page object if the process is ProcessPageEdit
+        $this->edit_page = $this->process_name == 'ProcessPageEdit' ? $this->pages->get($this->input->id) : new NullPage;
+        // Is the ProcessPageEdit && are the filters set
+        $this->template_name = $this->filter && $this->edit_page->id ? $this->edit_page->template->name : null;
         // All dependencies
         $this->dependency_array = $this->explode($this->dependencies);
-        // Is the ProcessPageEdit && are the filters set
-        $this->template_name = $this->filter && $this->process_name == 'ProcessPageEdit' ? $this->pages->get($this->input->id)->template->name : null;
         // Create dependencies array
         $this->createDependencies();
         // Get the template name if process is ProcessPageEdit
         $this->createProcessFiles();
+        // Get the template name if process is ProcessPageEdit
+        $this->addToJsConfig();
         // Hook it
         $this->addHookAfter('Process::execute', $this, 'injectFiles');
     }
@@ -178,6 +185,42 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
 
 
 
+    private function addToJsConfig() {
+
+        if (!$this->js_config) return;
+
+        $user = $this->user;
+        $roles = explode("|", $user->roles->implode('|', 'name'));
+        $data = array();
+        $data['process'] = $this->process_name;
+        $data['user'] = array(
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'roles' => $roles,
+        );
+
+        if ($this->process_name == 'ProcessPageEdit') {
+            $page = $this->edit_page;
+            $data['page'] = array(
+                'id' => $page->id,
+                'name' => $page->name,
+                'path' => $page->path,
+                'parentID' => $page->parentID,
+                'numChildren' => $page->numChildren,
+                'created' => $page->created,
+                'modified' => $page->modified,
+                'createdUser' => $page->createdUser->name,
+                'modifiedUser' => $page->modifiedUser->name,
+            );
+            $data['fields'] = explode("|", $page->fields->implode('|', 'name'));
+        }
+
+        $this->config->js($this->className(), array($data));
+    }
+
+
+
     /**
      * Append scripts & styles to the filenamearray
      *
@@ -190,7 +233,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
             $this->dependency_files,
             $this->process_files,
             $this->template_file
-        );
+            );
 
         foreach ($files as $file) {
             if (strpos($file, '.css') !== false) {
@@ -260,11 +303,11 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
 
         $inputfields = new InputfieldWrapper();
 
+
         // process_filter
         $field = $this->modules->get('InputfieldAsmSelect');
         $field->attr('name', 'process_filter');
         $field->label = $this->_('Enable for process');
-        $field->description = $this->_('Scripts & styles are only appended to pages running the selected process.');
         foreach ($this->modules as $module) {
             $name = (string) $module;
             if (strpos($name, 'Process') !== 0 ) continue;
@@ -273,18 +316,36 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
             $field->addOption($name, "$name, ($label)");
         }
         $field->attr('value', is_array($this->process_filter) ? $this->process_filter : array());
+        $field->columnWidth = 66;
+        $inputfields->add($field);
+
+        $field = $this->modules->get('InputfieldCheckbox');
+        $field->attr('name', 'js_config');
+        $field->set('skipLabel', Inputfield::skipLabelFor);
+        $field->label = $this->_('Additional javascript config data');
+        $field->notes = $this->_("Tip: console.log(config.AdminCustomFiles)");
+        $field->attr('value', $this->js_config);
+        $field->attr('checked', $this->js_config);
+        $field->columnWidth = 34;
         $inputfields->add($field);
 
         // files_folder
         $field = $this->modules->get('InputfieldText');
         $field->attr('name', 'files_folder');
-        $field->label = $this->_('Scripts & styles folder');
+        $field->label = $this->_('Dynamic scripts & styles');
         $description  = $this->_('In this folder you can place scripts and styles. ');
         $description .= $this->_('Those files should be named as an admin process with extension css or js. ');
         $description .= "\n";
         $description .= $this->_('For the process ProcessPageEdit, you can additionaly use the template name with .js or .css.');  // Columns description
         $field->description  = $description;  // Columns description
         $field->value = $files_folder ? $files_folder : self::$factorySettings['files_folder'];
+        if (file_exists($this->config->paths->templates . $files_folder)) {
+            $field->notes = $this->config->urls->templates . $files_folder . " " . $this->_('exist.');
+            $field->getErrors(true);
+        } else {
+            $field->error("folder doesn't exist");
+            $field->notes = $this->config->urls->templates . $files_folder . " " . $this->_('doesn’t exist');
+        }
         $inputfields->add($field);
 
         // dependencies
@@ -305,6 +366,8 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
         $field->notes = $notes;
         $field->value = trim($this->dependencies);
         $inputfields->add($field);
+
+
 
         return $inputfields;
     }
