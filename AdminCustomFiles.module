@@ -185,10 +185,13 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
 
 
 
+    /**
+     * Populate the js config data
+     *
+     */
+
     private function addToJsConfig() {
-
         if (!$this->js_config) return;
-
         $user = $this->user;
         $roles = explode("|", $user->roles->implode('|', 'name'));
         $data = array();
@@ -199,7 +202,6 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
             'email' => $user->email,
             'roles' => $roles,
         );
-
         if ($this->process_name == 'ProcessPageEdit') {
             $page = $this->edit_page;
             $data['page'] = array(
@@ -215,7 +217,6 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
             );
             $data['fields'] = explode("|", $page->fields->implode('|', 'name'));
         }
-
         $this->config->js($this->className(), array($data));
     }
 
@@ -303,7 +304,6 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
 
         $inputfields = new InputfieldWrapper();
 
-
         // process_filter
         $field = $this->modules->get('InputfieldAsmSelect');
         $field->attr('name', 'process_filter');
@@ -332,42 +332,41 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
         // files_folder
         $field = $this->modules->get('InputfieldText');
         $field->attr('name', 'files_folder');
-        $field->label = $this->_('Dynamic scripts & styles');
-        $description  = $this->_('In this folder you can place scripts and styles. ');
-        $description .= $this->_('Those files should be named as an admin process with extension css or js. ');
+        $field->label = $this->_('Place dynamic styles & scripts in this folder');
+        $description = $this->_('- Name the files accordingly to the “running process name” and use .css or .js as extension.');
         $description .= "\n";
-        $description .= $this->_('For the process ProcessPageEdit, you can additionaly use the template name with .js or .css.');  // Columns description
+        $description .= $this->_('- For the ProcessPageEdit process you could additionally add files with the template-name ending with .js and/or .css');
+        $description .= "\n";
+        $description .= $this->_('- The process must be enabled here in the settings.');
+        $description .= "\n";
+        $description .= $this->_('- Only files matching the running process name are included.');
         $field->description  = $description;  // Columns description
         $field->value = $files_folder ? $files_folder : self::$factorySettings['files_folder'];
         if (file_exists($this->config->paths->templates . $files_folder)) {
-            $field->notes = $this->config->urls->templates . $files_folder . " " . $this->_('exist.');
+            $field->notes = $this->config->urls->templates . $files_folder . '/';
             $field->getErrors(true);
         } else {
             $field->error("folder doesn't exist");
-            $field->notes = $this->config->urls->templates . $files_folder . " " . $this->_('doesn’t exist');
+            $field->notes = $this->_('Warning:') . ' ' .$this->config->urls->templates . $files_folder . "/ " . $this->_('doesn’t exist !');
         }
         $inputfields->add($field);
 
         // dependencies
         $field = $this->modules->get('InputfieldTextarea');
         $field->attr('name', 'dependencies');
-        $field->label = $this->_('Dependencies');
-        $description  = $this->_('(1) Say you want to use the jquery.validate plug-in to validate the fields in the “Edit Page forms” type the ProcessPageEdit followed by the url to the jquery plug-in. ');
-        $description .= $this->_('If the process matches the running admin process (i.e. ProcessPageEdit ) and that process is enabled ➊ this dependency will load before the other scripts & files.');
+        $field->label = $this->_('Dependencies, use this for plug-ins and other requirements.');
+        $description  = $this->_('- Specify just an URL and this file will be included on every page, regardless if the process is enabled.');
         $description .= "\n";
-        $description .= $this->_('(2) When you type a url without a preceding admin process, the file will be included, regardless if the process is enabled.');
-        $description .= "\n\n";
-        $description .= $this->_('Every dependency on it’s own line. Urls relative to the processwire templates folder.');
+        $description .= $this->_('- Files gets included when the admin process matches the process name proceding the URL. (The process must be enabled.)');
+        $description .= "\n";
+        $description .= $this->_('- Every dependency on it’s own line, URL’s relative to the processwire templates folder.');
+        $description .= "\n";
+        $description .= $this->_('- Multiple dependencies are possible.');
         $field->description = $description;
-        $notes  = 'ProcessPageEdit scripts/plug-ins/jquery.validate/jquery.validate.js';
-        $notes .= "\n";
-        $notes .= '➊ Process should be selected in the asmSelect';
-
+        $notes  = 'e.g. ProcessPageEdit scripts/plug-ins/jquery.validate/jquery.validate.js';
         $field->notes = $notes;
         $field->value = trim($this->dependencies);
         $inputfields->add($field);
-
-
 
         return $inputfields;
     }
