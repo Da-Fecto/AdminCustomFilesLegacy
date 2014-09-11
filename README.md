@@ -34,7 +34,7 @@ var config = {
             "user": {
                 "id": 41,
                 "name": "admin",
-                "email": "yourname@address.com",
+                "email": "yourname@domain.net",
                 "roles": [
                     "guest",
                     "superuser"
