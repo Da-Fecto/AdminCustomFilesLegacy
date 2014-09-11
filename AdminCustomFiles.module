@@ -115,7 +115,6 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
      */
 
     public function ready() {
-
         // Current processname
         $this->process_name = (string) $this->page->process;
         // Processes enabled ?
@@ -228,14 +227,12 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
      */
 
     protected function injectFiles() {
-
         $files = array_merge(
             $this->global_files,
             $this->dependency_files,
             $this->process_files,
             $this->template_file
             );
-
         foreach ($files as $file) {
             if (strpos($file, '.css') !== false) {
                 $this->config->styles->append($file);
@@ -292,7 +289,6 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
      */
 
     private function getConfig() {
-
         // If scripts & styles folder is blank use factory settings
         $files_folder = trim($this->files_folder);
         $empty_config_data = array();
@@ -301,9 +297,8 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
             $empty_config_data[$key] = $value;
         }
         if (count($empty_config_data)) { $this->modules->saveModuleConfigData($this->className(), $empty_config_data); }
-
+        
         $inputfields = new InputfieldWrapper();
-
         // process_filter
         $field = $this->modules->get('InputfieldAsmSelect');
         $field->attr('name', 'process_filter');
