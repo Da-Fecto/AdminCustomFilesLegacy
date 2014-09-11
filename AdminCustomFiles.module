@@ -39,23 +39,23 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
 
 
 
-    // (bool) Current Page process is selected (Module configuration, Enable for process)
+    // (bool) Current Page process is selected (Module configuration)
     private $filter = null;
     // (string) Name of the current Page process
     private $process_name = null;
-    // (Page) Page object id process is ProcessPageEdit
+    // (Page) Page object if the process is ProcessPageEdit
     private $edit_page = null;
-    // (string) Name of the template to edit if the process is ProcessPageEdit
+    // (string) Name of the template if the process is ProcessPageEdit
     private $template_name = null;
     // (array) Converted textarea Dependencies to array (Module configuration)
     private $dependency_array = array();
-    // (array) Gobal files without Process dependencies (i.e site/scripts/lib/library.js)
+    // (array) Gobal files without Process dependencies (e.g. site/scripts/lib/library.js)
     private $global_files = array();
-    // (array) Gobal files with Process dependencies (i.e site/scripts/lib/jquery-plug-in.js)
+    // (array) Gobal files with Process dependencies (e.g ProcessPageEdit site/scripts/lib/jquery-plug-in.js)
     private $dependency_files = array();
-    // (array) AdminCustomFiles depending on admin process (i.e. ProcessPageEdit.js)
+    // (array) Files depending on admin process (i.e. ProcessPageEdit.js)
     private $process_files = array();
-    // (array) On ProcessPageEdit process (template-name.css or template-name.js)
+    // (array) On ProcessPageEdit process (template-name.css and or template-name.js)
     private $template_file = array();
 
 
@@ -130,7 +130,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
         $this->createDependencies();
         // Get the template name if process is ProcessPageEdit
         $this->createProcessFiles();
-        // Get the template name if process is ProcessPageEdit
+        // Create js config
         $this->addToJsConfig();
         // Hook it
         $this->addHookAfter('Process::execute', $this, 'injectFiles');
