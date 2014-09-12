@@ -17,8 +17,8 @@ scripts and styles to the Processwire admin area.
 
 ### When what to use
 
-**\#1** Loading plugins or other dependencies for every admin page.<br>
-**\#2** Loading plugins or other dependencies only for a specific admin process. (e.g. load jquery.validate on ProcessPageEdit)<br>
+**\#1** Enable plugins and/or other dependencies for every admin page.<br>
+**\#2** Enable plugins & dependencies for a specific admin process. (e.g. load jquery.validate on ProcessPageEdit)<br>
 **\#3** Write your own scripts & styles, could be depending on previous loaded plug-ins.<br>
 **\#4** Write your own scripts & styles, filtered on template name.
 
