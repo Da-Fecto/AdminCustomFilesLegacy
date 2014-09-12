@@ -41,7 +41,7 @@ var config = {
                 ]
             },
             "page": {
-                "id": 1013,
+                "id": 1234,
                 "name": "news",
                 "path": "/news/",
                 "parentID": 1,
