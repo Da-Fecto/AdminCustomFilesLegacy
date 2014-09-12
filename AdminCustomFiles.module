@@ -28,7 +28,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
     public static function getModuleInfo() {
         return array(
             'title' => 'Admin Custom Files',
-            'version' => 1,
+            'version' => 3,
             'author' => 'Martijn Geerts',
             'summary' => 'Add custom scripts & styles to the admin with optional dependencies',
             'singular' => true,
