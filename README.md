@@ -9,11 +9,11 @@ scripts and styles to the Processwire admin area.
 1. Type the url to the javascript(s) or and style(s) in the dependencies textarea. ➊
 2. Type the processname followed by an URL seperated by a space in the dependencies textarea. ➋
 3. Name the files accordingly to the “running admin process name” and use .css or .js as extension. ➌
-4. For the ProcessPageEdit process you could additionally add files with the template-name ending with .js and/or .css. ➌
+4. For the ProcessPageEdit process add files with the template-name ending with .js and/or .css. ➌
 
-➊ Loads always, on every admin page, multiple files possible, relative to the templates folder.<br>
-➋ Process needs to be enabled, loads only on process, multiple files possible, relative to the templates folder.<br>
-➌ Process needs to be enabled, place the files in the admin custom files folder inside your templates folder.
+➊ Loads on every admin page, multiple files possible, relative to the templates folder. <br>
+➋ Loads only on process, multiple files possible, relative to the templates folder. **Process needs to be enabled!**<br>
+➌ Place the files in the admin custom files folder inside your templates folder. **Process needs to be enabled!**
 
 ### When what to use
 
