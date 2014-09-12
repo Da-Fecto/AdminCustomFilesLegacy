@@ -39,6 +39,15 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
 
 
 
+    /**
+     * init() needed for PW2.4
+     *
+     */
+
+    public function init() {}
+
+
+
     // (bool) Current Page process is selected (Module configuration)
     private $filter = null;
     // (string) Name of the current Page process
@@ -195,6 +204,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
         $roles = explode("|", $user->roles->implode('|', 'name'));
         $data = array();
         $data['process'] = $this->process_name;
+        $data['host'] = $this->config->httpHost;
         $data['user'] = array(
             'id' => $user->id,
             'name' => $user->name,
@@ -297,7 +307,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
             $empty_config_data[$key] = $value;
         }
         if (count($empty_config_data)) { $this->modules->saveModuleConfigData($this->className(), $empty_config_data); }
-        
+
         $inputfields = new InputfieldWrapper();
         // process_filter
         $field = $this->modules->get('InputfieldAsmSelect');
