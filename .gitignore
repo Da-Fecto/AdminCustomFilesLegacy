@@ -1,20 +1,29 @@
-# Composer files
-composer.phar
-vendor/
-
-# Local configs
-config/autoload/*.local.php
-
-# Binary gettext files
-*.mo
-
-# Data
-data/logs/
-data/cache/
-data/sessions/
-data/tmp/
-temp/
-
-# Legacy ZF1
-demos/
-extras/documentation
+.DS_Store?
+*.old
+*.old/*
+*.new
+*.new/*
+old
+old/*
+*.1
+*.1/*
+sess_*
+*.cache
+*.swp
+*.swo
+*.sh
+site-default/config-dev.php
+site-default/assets/logs
+site-default/assets/files
+site-default/assets/sessions
+site-default/assets/cache
+site-default/assets/installed.php
+site
+site-skyscrapers
+.htaccess
+tmp
+upgrade.php
+.idea
+.svn
+.sass-cache
+.sass-cache/*
