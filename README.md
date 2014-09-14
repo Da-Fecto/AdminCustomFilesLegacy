@@ -28,37 +28,35 @@ You could enable additinal javascript config data. Here's an example:
 
 ```javascript
 var config = {
-    "AdminCustomFiles": [
-        {
-            "process": "ProcessPageEdit",
-            "user": {
-                "id": 41,
-                "name": "admin",
-                "email": "yourname@domain.net",
-                "roles": [
-                    "guest",
-                    "superuser"
-                ]
-            },
-            "page": {
-                "id": 1234,
-                "name": "news",
-                "path": "/news/",
-                "parentID": 1,
-                "numChildren": 0,
-                "created": 1407872923,
-                "modified": 1410204684,
-                "createdUser": "admin",
-                "modifiedUser": "admin"
-            },
-            "fields": [
-                "content",
-                "title",
-                "headline",
-                "meta_description"
+    "AdminCustomFiles": {
+        "process": "ProcessPageEdit",
+        "user": {
+            "id": 41,
+            "name": "admin",
+            "email": "yourname@domain.net",
+            "roles": [
+                "guest",
+                "superuser"
             ]
-        }
-    ]
+        },
+        "page": {
+            "id": 1234,
+            "name": "news",
+            "path": "/news/",
+            "parentID": 1,
+            "numChildren": 0,
+            "created": 1407872923,
+            "modified": 1410204684,
+            "createdUser": "admin",
+            "modifiedUser": "admin"
+        },
+        "fields": [
+            "content",
+            "title",
+            "headline",
+            "meta_description"
+        ]
+    }
 };
 ```
 
