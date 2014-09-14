@@ -226,7 +226,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
             );
             $data['fields'] = explode("|", $page->fields->implode('|', 'name'));
         }
-        $this->config->js($this->className(), array($data));
+        $this->config->js($this->className(), $data);
     }
 
 
