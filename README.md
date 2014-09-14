@@ -61,4 +61,5 @@ var config = {
 ```
 
 Example of loaded files
+
 ![loaded files](https://github.com/Da-Fecto/AdminCustomFiles/blob/master/console.png)
