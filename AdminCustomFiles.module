@@ -28,7 +28,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
     public static function getModuleInfo() {
         return array(
             'title' => 'Admin Custom Files',
-            'version' => 3,
+            'version' => 5,
             'author' => 'Martijn Geerts',
             'summary' => 'Add custom scripts & styles to the admin with optional dependencies',
             'singular' => true,
@@ -40,7 +40,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
 
 
     /**
-     * init() needed for PW2.4
+     * init() needed for PW2.4 and below
      *
      */
 
@@ -202,14 +202,15 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
         if (!$this->js_config) return;
         $user = $this->user;
         $roles = explode("|", $user->roles->implode('|', 'name'));
-        $data = array();
-        $data['process'] = $this->process_name;
-        $data['host'] = $this->config->httpHost;
-        $data['user'] = array(
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'roles' => $roles,
+        $data = array(
+            'process' => $this->process_name,
+            'host' => $this->config->httpHost,
+            'user' => array(
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'roles' => $roles,
+            )
         );
         if ($this->process_name == 'ProcessPageEdit') {
             $page = $this->edit_page;
@@ -309,6 +310,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
         if (count($empty_config_data)) { $this->modules->saveModuleConfigData($this->className(), $empty_config_data); }
 
         $inputfields = new InputfieldWrapper();
+
         // process_filter
         $field = $this->modules->get('InputfieldAsmSelect');
         $field->attr('name', 'process_filter');
@@ -323,7 +325,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
         $field->attr('value', is_array($this->process_filter) ? $this->process_filter : array());
         $field->columnWidth = 66;
         $inputfields->add($field);
-
+        // js_config
         $field = $this->modules->get('InputfieldCheckbox');
         $field->attr('name', 'js_config');
         $field->set('skipLabel', Inputfield::skipLabelFor);
@@ -333,7 +335,6 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
         $field->attr('checked', $this->js_config);
         $field->columnWidth = 34;
         $inputfields->add($field);
-
         // files_folder
         $field = $this->modules->get('InputfieldText');
         $field->attr('name', 'files_folder');
@@ -355,7 +356,6 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
             $field->notes = $this->_('Warning:') . ' ' .$this->config->urls->templates . $files_folder . "/ " . $this->_('doesn’t exist !');
         }
         $inputfields->add($field);
-
         // dependencies
         $field = $this->modules->get('InputfieldTextarea');
         $field->attr('name', 'dependencies');
