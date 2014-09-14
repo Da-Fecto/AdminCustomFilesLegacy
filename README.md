@@ -30,31 +30,31 @@ You could enable additinal javascript config data. Here's an example:
 var config = {
     "AdminCustomFiles": {
         "process": "ProcessPageEdit",
+        "host": "domain.net",
         "user": {
-            "id": 41,
-            "name": "admin",
-            "email": "yourname@domain.net",
-            "roles": [
-                "guest",
-                "superuser"
-            ]
+          "id": 41,
+          "name": "admin",
+          "email": "user@domain.net",
+          "roles": [
+            "guest",
+            "superuser"
+          ]
         },
         "page": {
-            "id": 1234,
-            "name": "news",
-            "path": "/news/",
-            "parentID": 1,
-            "numChildren": 0,
-            "created": 1407872923,
-            "modified": 1410204684,
-            "createdUser": "admin",
-            "modifiedUser": "admin"
+          "id": 1,
+          "name": "",
+          "path": "/",
+          "parentID": 0,
+          "numChildren": 7,
+          "created": -62169985172,
+          "modified": 1410695857,
+          "createdUser": "processwire",
+          "modifiedUser": "admin"
         },
         "fields": [
-            "content",
-            "title",
-            "headline",
-            "meta_description"
+          "title",
+          "body",
+          "images"
         ]
     }
 };
