@@ -28,7 +28,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
     public static function getModuleInfo() {
         return array(
             'title' => 'Admin Custom Files',
-            'version' => 5,
+            'version' => 6,
             'author' => 'Martijn Geerts',
             'summary' => 'Add custom scripts & styles to the admin with optional dependencies',
             'singular' => true,
@@ -44,12 +44,16 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
      *
      */
 
-    public function init() {}
+    public function init() {
+
+    }
 
 
 
     // (bool) Current Page process is selected (Module configuration)
     private $filter = null;
+    // (string) Name of the admin theme
+    private $admin_theme = null;
     // (string) Name of the current Page process
     private $process_name = null;
     // (Page) Page object if the process is ProcessPageEdit
@@ -60,12 +64,16 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
     private $dependency_array = array();
     // (array) Gobal files without Process dependencies (e.g. site/scripts/lib/library.js)
     private $global_files = array();
+    // (array) Admin theme files (e.g. AdminThemeReno.js and/or AdminThemeReno.js)
+    private $theme_based_files = array();
     // (array) Gobal files with Process dependencies (e.g ProcessPageEdit site/scripts/lib/jquery-plug-in.js)
     private $dependency_files = array();
     // (array) Files depending on admin process (i.e. ProcessPageEdit.js)
     private $process_files = array();
     // (array) On ProcessPageEdit process (template-name.css and or template-name.js)
-    private $template_file = array();
+    private $template_files = array();
+    // (array) Admin Custom Files array
+    private $AdminCustomFiles = array();
 
 
 
@@ -117,6 +125,22 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
 
 
 
+    /**
+     * Helper function to get Custom files array
+     *
+     * @return mixed
+     */
+
+    private function getAdminCustomFiles() {
+        $path = $this->config->paths->templates . $this->files_folder;
+        if (!$this->files_folder || !file_exists($path)) return false;
+        foreach (scandir($path) as $file) {
+            if (strpos($file, '.') === 0) continue;
+            $this->AdminCustomFiles[] = $file;
+        }
+    }
+
+
 
     /**
      * On API ready, controller & set the hook
@@ -134,16 +158,19 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
         $this->template_name = $this->filter && $this->edit_page->id ? $this->edit_page->template->name : null;
         // All dependencies
         $this->dependency_array = $this->explode($this->dependencies);
+        // Create AdminCustomFiles array
+        $this->getAdminCustomFiles();
         // Create dependencies array
         $this->createDependencies();
         // Get the template name if process is ProcessPageEdit
         $this->createProcessFiles();
+        // Insert Theme based files
+        $this->createThemeFiles();
         // Create js config
         $this->addToJsConfig();
-        // Hook it
-        $this->addHookAfter('Process::execute', $this, 'injectFiles');
+        // Hook it (please help find me to find the last hook)
+        $this->addHookAfter('ProcessController::execute', $this, 'injectFiles');
     }
-
 
 
 
@@ -153,7 +180,12 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
      */
 
     private function createDependencies() {
+
+
         if (!count($this->dependency_array)) return false;
+
+
+
         foreach ($this->dependency_array as $dependency) {
             $type = strpos($dependency, ' ') > 0 ? 'dependency' : 'global';
             if ($type === 'dependency' && !$this->filter) continue;
@@ -178,15 +210,25 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
 
     private function createProcessFiles() {
         if (!$this->filter) return false;
-        $AdminCustomFiles = $this->config->paths->templates . $this->files_folder;
-        if (!$this->files_folder || !file_exists($AdminCustomFiles)) return false;
-        $AdminCustomFiles = scandir($AdminCustomFiles);
-        foreach ($AdminCustomFiles as $file) {
-            if (strpos($file, '.') === 0) continue;
+        if (!count($this->AdminCustomFiles)) return false;
+        foreach ($this->AdminCustomFiles as $file) {
             if (strpos($file, $this->process_name) === 0) {
                 $this->process_files[] = $this->file($this->files_folder . "/" . $file);
             } else if ($this->template_name && strpos($file, $this->template_name) === 0) {
-                $this->template_file[] = $this->file($this->files_folder . "/" . $file);
+                $this->template_files[] = $this->file($this->files_folder . "/" . $file);
+            }
+        }
+    }
+
+
+
+    private function createThemeFiles() {
+        $this->admin_theme = (string) $this->user->admin_theme;
+        if (!$this->theme_files) return false;
+        if (!count($this->AdminCustomFiles)) return false;
+        foreach ($this->AdminCustomFiles as $file) {
+            if (strpos($file, $this->admin_theme) === 0) {
+                $this->theme_based_files[] = $this->file($this->files_folder . "/" . $file);
             }
         }
     }
@@ -205,6 +247,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
         $data = array(
             'process' => $this->process_name,
             'host' => $this->config->httpHost,
+            'adminTheme' => $this->admin_theme,
             'user' => array(
                 'id' => $user->id,
                 'name' => $user->name,
@@ -238,11 +281,13 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
      */
 
     protected function injectFiles() {
+        $this->message('dsfasdfa');
         $files = array_merge(
             $this->global_files,
+            $this->theme_based_files,
             $this->dependency_files,
             $this->process_files,
-            $this->template_file
+            $this->template_files
             );
         foreach ($files as $file) {
             if (strpos($file, '.css') !== false) {
@@ -323,17 +368,29 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
             $field->addOption($name, "$name, ($label)");
         }
         $field->attr('value', is_array($this->process_filter) ? $this->process_filter : array());
-        $field->columnWidth = 66;
+        $field->columnWidth = 40;
         $inputfields->add($field);
         // js_config
         $field = $this->modules->get('InputfieldCheckbox');
         $field->attr('name', 'js_config');
         $field->set('skipLabel', Inputfield::skipLabelFor);
-        $field->label = $this->_('Additional javascript config data');
+        $field->label = $this->_('JSON');
+        $field->label2 = $this->_('Additional javascript config data');
         $field->notes = $this->_("Tip: console.log(config.AdminCustomFiles)");
         $field->attr('value', $this->js_config);
         $field->attr('checked', $this->js_config);
-        $field->columnWidth = 34;
+        $field->columnWidth = 30;
+        $inputfields->add($field);
+        // theme_files
+        $field = $this->modules->get('InputfieldCheckbox');
+        $field->attr('name', 'theme_files');
+        $field->set('skipLabel', Inputfield::skipLabelFor);
+        $field->label = $this->_('Theme based files');
+        $field->label2 = $this->_('Include theme based files');
+        $field->notes = $this->_("e.g. AdminThemeReno.js and/or AdminThemeReno.js");
+        $field->attr('value', $this->theme_files);
+        $field->attr('checked', $this->theme_files);
+        $field->columnWidth = 30;
         $inputfields->add($field);
         // files_folder
         $field = $this->modules->get('InputfieldText');
@@ -350,10 +407,8 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
         $field->value = $files_folder ? $files_folder : self::$factorySettings['files_folder'];
         if (file_exists($this->config->paths->templates . $files_folder)) {
             $field->notes = $this->config->urls->templates . $files_folder . '/';
-            $field->getErrors(true);
         } else {
-            $field->error("folder doesn't exist");
-            $field->notes = $this->_('Warning:') . ' ' .$this->config->urls->templates . $files_folder . "/ " . $this->_('doesn’t exist !');
+            $field->notes = $this->_('Warning:') . ' ' . $this->config->urls->templates . $files_folder . "/ " . $this->_('doesn’t exist !');
         }
         $inputfields->add($field);
         // dependencies
