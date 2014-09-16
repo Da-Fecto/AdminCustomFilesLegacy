@@ -28,7 +28,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
     public static function getModuleInfo() {
         return array(
             'title' => 'Admin Custom Files',
-            'version' => 7,
+            'version' => 8,
             'author' => 'Martijn Geerts',
             'summary' => 'Add custom scripts & styles to the admin with optional dependencies',
             'singular' => true,
@@ -225,6 +225,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
     private function createThemeFiles() {
         $this->admin_theme = (string) $this->user->admin_theme;
         if (!$this->theme_files) return false;
+        if (!$this->admin_theme) return false;
         if (!count($this->AdminCustomFiles)) return false;
         foreach ($this->AdminCustomFiles as $file) {
             if (strpos($file, $this->admin_theme) === 0) {
