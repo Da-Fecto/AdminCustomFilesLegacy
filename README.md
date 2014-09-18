@@ -23,6 +23,8 @@ scripts and styles to the Processwire admin area.
 **\#2** Enable plugins & dependencies for a specific admin process. (e.g. load jquery.validate on ProcessPageEdit)<br>
 **\#3** Write your own scripts & styles, could be depending on previous loaded plug-ins.<br>
 **\#4** Write your own scripts & styles, filtered on template name.
+**\#4** Write your own scripts & styles, only for a chosen admin theme.
+
 
 ### Additional javascript config data
 
