@@ -28,7 +28,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
     public static function getModuleInfo() {
         return array(
             'title' => 'Admin Custom Files',
-            'version' => 8,
+            'version' => 10,
             'author' => 'Martijn Geerts',
             'summary' => 'Add custom scripts & styles to the admin with optional dependencies',
             'singular' => true,
@@ -112,7 +112,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
 
 
     /**
-     * Helper function to return a valid URL or false.
+     * Helper function thats returns a valid relative URL or false.
      *
      * @return mixed
      */
@@ -126,7 +126,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
 
 
     /**
-     * Helper function to get Custom files array
+     * Include admintheme based files
      *
      * @return mixed
      */
@@ -180,12 +180,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
      */
 
     private function createDependencies() {
-
-
         if (!count($this->dependency_array)) return false;
-
-
-
         foreach ($this->dependency_array as $dependency) {
             $type = strpos($dependency, ' ') > 0 ? 'dependency' : 'global';
             if ($type === 'dependency' && !$this->filter) continue;
@@ -222,8 +217,13 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
 
 
 
+    /**
+     * Scripts & files inside the AdminCustomFiles triggered on the running page process.
+     *
+     */
+
     private function createThemeFiles() {
-        $this->admin_theme = (string) $this->user->admin_theme;
+        $this->admin_theme = !$this->user->admin_theme ? 'AdminThemeDefault' : $this->user->admin_theme;
         if (!$this->theme_files) return false;
         if (!$this->admin_theme) return false;
         if (!count($this->AdminCustomFiles)) return false;
@@ -256,6 +256,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
                 'roles' => $roles,
             )
         );
+
         if ($this->process_name == 'ProcessPageEdit') {
             $page = $this->edit_page;
             $data['page'] = array(
@@ -269,6 +270,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
                 'createdUser' => $page->createdUser->name,
                 'modifiedUser' => $page->modifiedUser->name,
             );
+            $data['template'] = $this->template_name;
             $data['fields'] = explode("|", $page->fields->implode('|', 'name'));
         }
         $this->config->js($this->className(), $data);
@@ -316,7 +318,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
 
 
     /**
-     * Create the AdminCustomFiles folder
+     * Uninstall
      *
      */
 
@@ -354,6 +356,11 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
         }
         if (count($empty_config_data)) { $this->modules->saveModuleConfigData($this->className(), $empty_config_data); }
 
+        // Show include based files for 2.5 and higher
+        $version = ProcessWire::versionMajor . ProcessWire::versionMinor . 0;
+        $version = (int) $version;
+        $theme = ($version < 250) ? false : true;
+
         $inputfields = new InputfieldWrapper();
 
         // process_filter
@@ -368,8 +375,9 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
             $field->addOption($name, "$name, ($label)");
         }
         $field->attr('value', is_array($this->process_filter) ? $this->process_filter : array());
-        $field->columnWidth = 40;
+        $field->columnWidth = ($theme ? 33 : 50);
         $inputfields->add($field);
+
         // js_config
         $field = $this->modules->get('InputfieldCheckbox');
         $field->attr('name', 'js_config');
@@ -379,19 +387,23 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
         $field->notes = $this->_("Tip: console.log(config.AdminCustomFiles)");
         $field->attr('value', $this->js_config);
         $field->attr('checked', $this->js_config);
-        $field->columnWidth = 30;
+        $field->columnWidth = ($theme ? 33 : 50);
         $inputfields->add($field);
+
         // theme_files
-        $field = $this->modules->get('InputfieldCheckbox');
-        $field->attr('name', 'theme_files');
-        $field->set('skipLabel', Inputfield::skipLabelFor);
-        $field->label = $this->_('Theme based files');
-        $field->label2 = $this->_('Include theme based files');
-        $field->notes = $this->_("e.g. AdminThemeReno.js and/or AdminThemeReno.js");
-        $field->attr('value', $this->theme_files);
-        $field->attr('checked', $this->theme_files);
-        $field->columnWidth = 30;
-        $inputfields->add($field);
+        if ($theme) {
+            $field = $this->modules->get('InputfieldCheckbox');
+            $field->attr('name', 'theme_files');
+            $field->set('skipLabel', Inputfield::skipLabelFor);
+            $field->label = $this->_('Theme based files');
+            $field->label2 = $this->_('Include theme based files');
+            $field->notes = $this->_("e.g. AdminThemeReno.js and/or AdminThemeReno.css");
+            $field->attr('value', $this->theme_files);
+            $field->attr('checked', $this->theme_files);
+            $field->columnWidth = 34;
+            $inputfields->add($field);
+        }
+
         // files_folder
         $field = $this->modules->get('InputfieldText');
         $field->attr('name', 'files_folder');
@@ -406,7 +418,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
         $field->description  = $description;  // Columns description
         $field->value = $files_folder ? $files_folder : self::$factorySettings['files_folder'];
         if (file_exists($this->config->paths->templates . $files_folder)) {
-            $field->notes = $this->config->urls->templates . $files_folder . '/';
+            $field->notes = $this->config->urls->templates . $field->value . '/';
         } else {
             $field->notes = $this->_('Warning:') . ' ' . $this->config->urls->templates . $files_folder . "/ " . $this->_('doesn’t exist !');
         }
