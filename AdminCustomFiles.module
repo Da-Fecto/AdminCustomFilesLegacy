@@ -214,14 +214,14 @@ class MarkupAdaptive extends WireData implements Module, ConfigurableModule {
         $inputfields->add($field);
 
         $field =$this->modules->get('InputfieldRadios');
-		$field->attr('name', 'adfix');
-		$field->label = __('Use as prefix or suffix');
-		$field->addOption('prefix', __('Prefix'));
-		$field->addOption('suffix', __('Suffix'));
-		$field->attr('value', $this->adfix);
+	$field->attr('name', 'adfix');
+	$field->label = __('Use as prefix or suffix');
+	$field->addOption('prefix', __('Prefix'));
+	$field->addOption('suffix', __('Suffix'));
+	$field->attr('value', $this->adfix);
         $field->columnWidth = 24;
-		$field->optionColumns = 1;
-		$inputfields->add($field);
+	$field->optionColumns = 1;
+	$inputfields->add($field);
 
         $field = $this->modules->get('InputfieldInteger');
         $field->label = $this->_('Execution delay after resize.');
@@ -250,7 +250,6 @@ class MarkupAdaptive extends WireData implements Module, ConfigurableModule {
         $field->attr('checked', $this->oldie_enabled);
         $field->notes = $this->_('See the examples how to respond on the resized & mediaquerychange events. Untested on lower versions of IE.');
         $inputfields->add($field);
-
 
         return $inputfields;
     }
