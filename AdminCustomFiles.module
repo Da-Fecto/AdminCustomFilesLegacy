@@ -251,6 +251,7 @@ class MarkupAdaptive extends WireData implements Module, ConfigurableModule {
         $field->notes = $this->_('See the examples how to respond on the resized & mediaquerychange events. Untested on lower versions of IE.');
         $inputfields->add($field);
 
+
         return $inputfields;
     }
 }
