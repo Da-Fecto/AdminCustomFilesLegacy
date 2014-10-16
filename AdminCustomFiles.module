@@ -1,101 +1,23 @@
 <?php
 
-/**
- * Admin Custom Files
- *
- * This module enables you to add custom scripts and files to the admin.
- *
- * Copyright (C) 2014 by Martijn Geerts
- *
- * ProcessWire 2.x
- * Copyright (C) 2010 by Ryan Cramer
- * Licensed under GNU/GPL v2, see LICENSE.TXT
- *
- * http://www.processwire.com
- * http://www.ryancramer.com
- *
- */
-
-class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
-
-    /**
-     * getModuleInfo is a module required by all modules to tell ProcessWire about them
-     *
-     * @return array
-     *
-     */
+class MarkupAdaptive extends WireData implements Module, ConfigurableModule {
 
     public static function getModuleInfo() {
         return array(
-            'title' => 'Admin Custom Files',
-            'version' => 10,
+            'title' => 'Markup Adaptive',
+            'summary' => 'Synced Javascript CSS Mediaquery helper',
             'author' => 'Martijn Geerts',
-            'summary' => 'Add custom scripts & styles to the admin with optional dependencies',
+            'version' => 2,
             'singular' => true,
-            'autoload' => "template=admin",
-            'icon' => 'file-code-o'
-            );
+        );
     }
 
 
 
-    /**
-     * init() needed for PW2.4 and below
-     *
-     */
-
-    public function init() {
-
-    }
-
-
-
-    // (bool) Current Page process is selected (Module configuration)
-    private $filter = null;
-    // (string) Name of the admin theme
-    private $admin_theme = null;
-    // (string) Name of the current Page process
-    private $process_name = null;
-    // (Page) Page object if the process is ProcessPageEdit
-    private $edit_page = null;
-    // (string) Name of the template if the process is ProcessPageEdit
-    private $template_name = null;
-    // (array) Converted textarea Dependencies to array (Module configuration)
-    private $dependency_array = array();
-    // (array) Gobal files without Process dependencies (e.g. site/scripts/lib/library.js)
-    private $global_files = array();
-    // (array) Admin theme files (e.g. AdminThemeReno.js and/or AdminThemeReno.js)
-    private $theme_based_files = array();
-    // (array) Gobal files with Process dependencies (e.g ProcessPageEdit site/scripts/lib/jquery-plug-in.js)
-    private $dependency_files = array();
-    // (array) Files depending on admin process (i.e. ProcessPageEdit.js)
-    private $process_files = array();
-    // (array) On ProcessPageEdit process (template-name.css and or template-name.js)
-    private $template_files = array();
-    // (array) Admin Custom Files array
-    private $AdminCustomFiles = array();
-
-
-
-    /**
-     * Factory settings
-     *
-     */
-
-    private static $factorySettings = array(
-        'files_folder' => 'AdminCustomFiles',
-    );
-
-
-
-    /**
-     * Set defaults for getConfig()
-     *
-     */
-
-    public function __construct() {
-        $this->set('files_folder', $this->factorySettings['files_folder']);
-    }
+    // Array with classnames and sizes used for JSON
+    private $json = null;
+    // Array with classnames
+    private $array = array();
 
 
 
@@ -105,227 +27,139 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
      * @return array
      */
 
-    private function explode($string) {
-        return array_map('trim', explode("\n", $string));
+    private function explode($string, $delimiter = "\r\n") {
+        return array_map('trim', explode($delimiter, $string));
     }
 
 
 
     /**
-     * Helper function thats returns a valid relative URL or false.
-     *
-     * @return mixed
-     */
-
-    private function file($string) {
-        $url = $this->config->urls->templates;
-        $path = $this->config->paths->templates;
-        return file_exists($path . $string) ? $url . $string : false;
-    }
-
-
-
-    /**
-     * Include admintheme based files
-     *
-     * @return mixed
-     */
-
-    private function getAdminCustomFiles() {
-        $path = $this->config->paths->templates . $this->files_folder;
-        if (!$this->files_folder || !file_exists($path)) return false;
-        foreach (scandir($path) as $file) {
-            if (strpos($file, '.') === 0) continue;
-            $this->AdminCustomFiles[] = $file;
-        }
-    }
-
-
-
-    /**
-     * On API ready, controller & set the hook
+     * Ready
      *
      */
-
     public function ready() {
-        // Current processname
-        $this->process_name = (string) $this->page->process;
-        // Processes enabled ?
-        $this->filter = is_array($this->process_filter) ? in_array($this->process_name, $this->process_filter) : false;
-        // Page object if the process is ProcessPageEdit
-        $this->edit_page = $this->process_name == 'ProcessPageEdit' ? $this->pages->get($this->input->id) : new NullPage;
-        // Is the ProcessPageEdit && are the filters set
-        $this->template_name = $this->filter && $this->edit_page->id ? $this->edit_page->template->name : null;
-        // All dependencies
-        $this->dependency_array = $this->explode($this->dependencies);
-        // Create AdminCustomFiles array
-        $this->getAdminCustomFiles();
-        // Create dependencies array
-        $this->createDependencies();
-        // Get the template name if process is ProcessPageEdit
-        $this->createProcessFiles();
-        // Insert Theme based files
-        $this->createThemeFiles();
-        // Create js config
-        $this->addToJsConfig();
-        // Hook it (please help find me to find the last hook)
-        $this->addHookAfter('ProcessController::execute', $this, 'injectFiles');
-    }
+        $array = array();
+        $lines = $this->explode(trim($this->sizes), "\r\n");
+        $end = count($lines) - 1;
+        // values in right order, & reassign keys
+        sort($lines, SORT_NUMERIC);
+        foreach ($lines as $key => $line) {
+            $properties = $this->explode($line, ' ');
+            $count = count($properties);
+            $size = array_pop($properties);
+            $obj = array();
 
-
-
-    /**
-     * Most likely these are plug-ins the admin custom files rely on. (Dependencies Settings)
-     *
-     */
-
-    private function createDependencies() {
-        if (!count($this->dependency_array)) return false;
-        foreach ($this->dependency_array as $dependency) {
-            $type = strpos($dependency, ' ') > 0 ? 'dependency' : 'global';
-            if ($type === 'dependency' && !$this->filter) continue;
-            if ($type === 'dependency' && strpos($dependency, $this->process_name) !== 0) continue;
-            if ($type === 'dependency') { $dependency = str_replace($this->process_name, '', $dependency); }
-            $file = $this->file(trim($dependency));
-            if (!$file) continue;
-            if ($type === 'dependency') {
-                $this->dependency_files[] = $file;
+            // last
+            if ($key === $end && $count == 2) {
+                $obj['min'] = $properties[0];
+                $obj['max'] = null;
+            // first
+            } else if (!$key && $count == 2) {
+                $obj['min'] = null;
+                $obj['max'] = $properties[0];
+            // else
+            } else if ($key !== $end) {
+                $obj['min'] = $properties[0];
+                $obj['max'] = $properties[1];
+            // error
             } else {
-                $this->global_files[] = $file;
+                $error = sprintf($this->_('The properties of the line “%s” are not correct'), $line);
+                $this->error($error);
             }
+
+            $this->array[] = $size;
+            $array[$size] = $obj;
         }
+        $this->json = !$errors ? $array : array();
     }
 
 
 
     /**
-     * Scripts & files inside the AdminCustomFiles triggered on the running page process.
+     *
      *
      */
-
-    private function createProcessFiles() {
-        if (!$this->filter) return false;
-        if (!count($this->AdminCustomFiles)) return false;
-        foreach ($this->AdminCustomFiles as $file) {
-            if (strpos($file, $this->process_name) === 0) {
-                $this->process_files[] = $this->file($this->files_folder . "/" . $file);
-            } else if ($this->template_name && strpos($file, $this->template_name) === 0) {
-                $this->template_files[] = $this->file($this->files_folder . "/" . $file);
-            }
-        }
+    protected function getSizesArray() {
+        if ($this->json === null) $this->ready();
+        return $this->json;
     }
 
 
 
     /**
-     * Scripts & files inside the AdminCustomFiles triggered on the running page process.
+     * init, needed for backward compatibility
      *
      */
 
-    private function createThemeFiles() {
-        $this->admin_theme = !$this->user->admin_theme ? 'AdminThemeDefault' : $this->user->admin_theme;
-        if (!$this->theme_files) return false;
-        if (!$this->admin_theme) return false;
-        if (!count($this->AdminCustomFiles)) return false;
-        foreach ($this->AdminCustomFiles as $file) {
-            if (strpos($file, $this->admin_theme) === 0) {
-                $this->theme_based_files[] = $this->file($this->files_folder . "/" . $file);
-            }
-        }
-    }
+    public function init() {}
 
+    public function __toString() {
+        $script = file_get_contents($this->config->paths->MarkupAdaptive . 'MarkupAdaptive.js');
 
-
-    /**
-     * Populate the js config data
-     *
-     */
-
-    private function addToJsConfig() {
-        if (!$this->js_config) return;
-        $user = $this->user;
-        $roles = explode("|", $user->roles->implode('|', 'name'));
-        $data = array(
-            'process' => $this->process_name,
-            'host' => $this->config->httpHost,
-            'adminTheme' => $this->admin_theme,
-            'user' => array(
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'roles' => $roles,
-            )
-        );
-
-        if ($this->process_name == 'ProcessPageEdit') {
-            $page = $this->edit_page;
-            $data['page'] = array(
-                'id' => $page->id,
-                'name' => $page->name,
-                'path' => $page->path,
-                'parentID' => $page->parentID,
-                'numChildren' => $page->numChildren,
-                'created' => $page->created,
-                'modified' => $page->modified,
-                'createdUser' => $page->createdUser->name,
-                'modifiedUser' => $page->modifiedUser->name,
+        $search = array(
+            '##DELAY##',
+            '##JSON##',
+            '##ARRAY##',
+            '##PREFIX##',
+            '##UNTIL##',
+            '##UPWARD##',
+            '##OLDIE##',
+            '##COOKIE##',
             );
-            $data['template'] = $this->template_name;
-            $data['fields'] = explode("|", $page->fields->implode('|', 'name'));
-        }
-        $this->config->js($this->className(), $data);
-    }
 
-
-
-    /**
-     * Append scripts & styles to the filenamearray
-     *
-     */
-
-    protected function injectFiles() {
-        $files = array_merge(
-            $this->global_files,
-            $this->theme_based_files,
-            $this->dependency_files,
-            $this->process_files,
-            $this->template_files
+        $replace = array(
+            $this->delay,
+            json_encode($this->getSizesArray()),
+            json_encode($this->array),
+            $this->adfix == 'prefix' ? 1 : 0,
+            "'" . $this->until . "'",
+            "'" . $this->upward . "'",
+            $this->oldie_enabled ? 1 : 0,
+            $this->cookie ? 1 : 0
             );
-        foreach ($files as $file) {
-            if (strpos($file, '.css') !== false) {
-                $this->config->styles->append($file);
-            } else if (strpos($file, '.js') !== false) {
-                $this->config->scripts->append($file);
-            }
+
+        $script = preg_replace('/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:(?<!\:|\\\)\/\/.*))/', '', $script);
+        $script = preg_replace('/\s+/', ' ', $script);
+        return trim(str_replace($search, $replace, $script));
+    }
+
+    /**
+     * Factory settings
+     *
+     */
+    private static $factorySettings = array(
+        'sizes' => "479px xsmall\r\n480px 767px small\r\n768px 959px medium\r\n960px 1199px large\r\n1200px xlarge",
+        'until' => 'upto-',
+        'upward' => 'from-',
+        'adfix' => 'prefix',
+        'delay' => 150,
+    );
+
+
+
+    /**
+     * Set defaults for getConfig()
+     *
+     */
+    public function __construct() {
+        foreach ($this->factorySettings as $key => $unused) {
+            $this->set($key, $this->factorySettings[$key]);
         }
     }
 
 
 
     /**
-     * Create the AdminCustomFiles folder
+     * Save factory seetings to Modules Config
      *
      */
-
-    public function ___install() {
-        $AdminCustomFiles = $this->config->paths->templates . self::$factorySettings['files_folder'];
-        if (!is_dir($AdminCustomFiles)) {
-            wireMkdir($AdminCustomFiles);
-            $this->message(sprintf($this->_("We created the folder /site/templates/%s/"), self::$factorySettings['files_folder']));
+    private function saveFactorySettings() {
+        $array = array();
+        foreach (self::$factorySettings as $key => $value) {
+            if (strlen($this->data[$key])) continue;
+            $array[$key] = $value;
         }
-    }
-
-
-
-    /**
-     * Uninstall
-     *
-     */
-
-    public function ___uninstall() {
-        if (is_dir($this->config->paths->templates . $this->files_folder)) {
-            $this->error(sprintf($this->_("You may remove the folder /site/templates/%s/ manually."), $this->files_folder));
-        }
+        if (count($array)) $this->modules->saveModuleConfigData($this->className(), $array);
     }
 
 
@@ -334,9 +168,8 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
      * Module configuration
      *
      */
-
     public static function getModuleConfigInputfields(array $data) {
-        return wire('modules')->get('AdminCustomFiles')->getConfig();
+        return wire('modules')->get('MarkupAdaptive')->getConfig();
     }
 
 
@@ -345,99 +178,77 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
      * Convenience method escaping the static visibility for getModuleConfigInputfields
      *
      */
-
     private function getConfig() {
-        // If scripts & styles folder is blank use factory settings
-        $files_folder = trim($this->files_folder);
-        $empty_config_data = array();
-        foreach (self::$factorySettings as $key => $value) {
-            if ($this->data[$key]) continue;
-            $empty_config_data[$key] = $value;
-        }
-        if (count($empty_config_data)) { $this->modules->saveModuleConfigData($this->className(), $empty_config_data); }
 
-        // Show include based files for 2.5 and higher
-        $version = ProcessWire::versionMajor . ProcessWire::versionMinor . 0;
-        $version = (int) $version;
-        $theme = ($version < 250) ? false : true;
+        // Config values
+        $sizes = trim($this->sizes);
+        $upward = trim($this->upward);
+        $until = trim($this->until);
+        $delay = $this->delay;
+
+        // insures atleast default data in database (getModuleConfigInputfields)
+        $this->saveFactorySettings();
 
         $inputfields = new InputfieldWrapper();
-
-        // process_filter
-        $field = $this->modules->get('InputfieldAsmSelect');
-        $field->attr('name', 'process_filter');
-        $field->label = $this->_('Enable for process');
-        foreach ($this->modules as $module) {
-            $name = (string) $module;
-            if (strpos($name, 'Process') !== 0 ) continue;
-            $info = $this->wire('modules')->getModuleInfo($name);
-            $label = !empty($info['title']) ? $info['title'] : $name;
-            $field->addOption($name, "$name, ($label)");
-        }
-        $field->attr('value', is_array($this->process_filter) ? $this->process_filter : array());
-        $field->columnWidth = ($theme ? 33 : 50);
+        $field = wire('modules')->get('InputfieldTextarea');
+        $field->name = 'sizes';
+        $field->label = $this->_("Base classnames (media queries)");
+        $field->description = $this->_("Every line represents a media query.");
+        $field->value = $sizes ? $sizes : self::$factorySettings['sizes'];
         $inputfields->add($field);
 
-        // js_config
+        $field = wire('modules')->get('InputfieldText');
+        $field->name = 'until';
+        $field->label = $this->_("Up to and including (prefix or suffix)");
+        $field->description = $this->_("");
+        $field->value = $until ? $until : self::$factorySettings['until'];
+        $field->columnWidth = 38;
+        $inputfields->add($field);
+
+        $field = wire('modules')->get('InputfieldText');
+        $field->name = 'upward';
+        $field->label = $this->_("Upward from and including (prefix or suffix)");
+        $field->description = $this->_("");
+        $field->value = $upward ? $upward : self::$factorySettings['upward'];
+        $field->columnWidth = 38;
+        $inputfields->add($field);
+
+        $field =$this->modules->get('InputfieldRadios');
+		$field->attr('name', 'adfix');
+		$field->label = __('Use as prefix or suffix');
+		$field->addOption('prefix', __('Prefix'));
+		$field->addOption('suffix', __('Suffix'));
+		$field->attr('value', $this->adfix);
+        $field->columnWidth = 24;
+		$field->optionColumns = 1;
+		$inputfields->add($field);
+
+        $field = $this->modules->get('InputfieldInteger');
+        $field->label = $this->_('Execution delay after resize.');
+        $field->attr('name', 'delay');
+        $field->attr('type', 'number');
+        $field->attr('max', '999');
+        $field->attr('maxlength', 3);
+        $field->value = $delay ? $delay : self::$factorySettings['delay'];
+        $field->columnWidth = 50;
+        $inputfields->add($field);
+
         $field = $this->modules->get('InputfieldCheckbox');
-        $field->attr('name', 'js_config');
+        $field->attr('name', 'cookie');
         $field->set('skipLabel', Inputfield::skipLabelFor);
-        $field->label = $this->_('JSON');
-        $field->label2 = $this->_('Additional javascript config data');
-        $field->notes = $this->_("Tip: console.log(config.AdminCustomFiles)");
-        $field->attr('value', $this->js_config);
-        $field->attr('checked', $this->js_config);
-        $field->columnWidth = ($theme ? 33 : 50);
+        $field->label = $this->_('Set classname in a cookie');
+        $field->attr('value', $this->cookie);
+        $field->attr('checked', $this->cookie);
+        $field->columnWidth = 50;
         $inputfields->add($field);
 
-        // theme_files
-        if ($theme) {
-            $field = $this->modules->get('InputfieldCheckbox');
-            $field->attr('name', 'theme_files');
-            $field->set('skipLabel', Inputfield::skipLabelFor);
-            $field->label = $this->_('Theme based files');
-            $field->label2 = $this->_('Include theme based files');
-            $field->notes = $this->_("e.g. AdminThemeReno.js and/or AdminThemeReno.css");
-            $field->attr('value', $this->theme_files);
-            $field->attr('checked', $this->theme_files);
-            $field->columnWidth = 34;
-            $inputfields->add($field);
-        }
-
-        // files_folder
-        $field = $this->modules->get('InputfieldText');
-        $field->attr('name', 'files_folder');
-        $field->label = $this->_('Place dynamic styles & scripts in this folder');
-        $description = $this->_('- Name the files accordingly to the “running process name” and use .css or .js as extension.');
-        $description .= "\n";
-        $description .= $this->_('- For the ProcessPageEdit process you could additionally add files with the template-name ending with .js and/or .css');
-        $description .= "\n";
-        $description .= $this->_('- The process must be enabled here in the settings.');
-        $description .= "\n";
-        $description .= $this->_('- Only files matching the running process name are included.');
-        $field->description  = $description;  // Columns description
-        $field->value = $files_folder ? $files_folder : self::$factorySettings['files_folder'];
-        if (file_exists($this->config->paths->templates . $files_folder)) {
-            $field->notes = $this->config->urls->templates . $field->value . '/';
-        } else {
-            $field->notes = $this->_('Warning:') . ' ' . $this->config->urls->templates . $files_folder . "/ " . $this->_('doesn’t exist !');
-        }
-        $inputfields->add($field);
-        // dependencies
-        $field = $this->modules->get('InputfieldTextarea');
-        $field->attr('name', 'dependencies');
-        $field->label = $this->_('Dependencies, use this for plug-ins and other requirements.');
-        $description  = $this->_('- Specify just an URL and this file will be included on every page, regardless if the process is enabled.');
-        $description .= "\n";
-        $description .= $this->_('- Files gets included when the admin process matches the process name proceding the URL. (The process must be enabled.)');
-        $description .= "\n";
-        $description .= $this->_('- Every dependency on it’s own line, URL’s relative to the processwire templates folder.');
-        $description .= "\n";
-        $description .= $this->_('- Multiple dependencies are possible.');
-        $field->description = $description;
-        $notes  = 'e.g. ProcessPageEdit scripts/plug-ins/jquery.validate/jquery.validate.js';
-        $field->notes = $notes;
-        $field->value = trim($this->dependencies);
+        $field = $this->modules->get('InputfieldCheckbox');
+        $field->attr('name', 'oldie_enabled');
+        $field->set('skipLabel', Inputfield::skipLabelFor);
+        $field->label = $this->_('Enable for Internet Explorer 7 & Internet Explorer 8.');
+        $field->attr('value', $this->oldie_enabled);
+        $field->attr('checked', $this->oldie_enabled);
+        $field->notes = $this->_('See the examples how to respond on the resized & mediaquerychange events. Untested on lower versions of IE.');
         $inputfields->add($field);
 
         return $inputfields;
