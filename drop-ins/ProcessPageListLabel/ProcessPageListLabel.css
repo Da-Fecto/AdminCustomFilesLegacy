@@ -1,0 +1,15 @@
+.template-icon i {
+    margin-right: .25em;
+    color: #999;
+    font-size: 14px;
+}
+
+.folder-icon {
+    float: right;
+}
+
+.folder-icon i {
+    margin-right: .25em;
+    color: #ADADAD;
+    font-size: 14px;
+}
