@@ -1,7 +1,18 @@
-.template-icon i {
+.template-icon {
     margin-right: .25em;
-    color: #999;
+    display: inline-block;
+    background: #F6F8F9;
+    height: 19px;
+    width: 19px;
+    text-align: center;
+    border-radius: 2px;
+    box-shadow: inset 1px 1px 1px 0 #E2E2E2;
+}
+
+.template-icon i {
+    color: #2F4248;
     font-size: 14px;
+    text-shadow: 0 0 1px  #FFF;
 }
 
 .folder-icon {
