@@ -1,6 +1,5 @@
 /**
  * jQuery Page List Label
- * FontawesomePageLabel replacement build on top of AdminCustomFiles.
  *
  * author: Martijn Geerts
  */
@@ -19,8 +18,8 @@
                 setIcon(data.page);
             }
             // Children
-            $.each(data.children, function () {
-                setIcon(this);
+            $.each(data.children, function (i, el) {
+                setIcon(el);
             });
         },
         setIcon = function (page) {
@@ -28,8 +27,10 @@
             // id based or template based
             if (templates.hasOwnProperty(page.id)) {
                 icon = templates[page.id];
+            } else if (templates.hasOwnProperty(page.template)) {
+                icon = templates[page.template];
             } else {
-                icon = templates.hasOwnProperty(page.template) ? templates[page.template] : defaults.icon;
+                icon = defaults.icon
             }
 
             var $el = $(".PageListID" + page.id),
@@ -71,7 +72,10 @@
         }, inputDefaults);
 
         $(document).ajaxComplete(function (i, event) {
-            parseData($.parseJSON(event.responseText));
+            var JSON = $.parseJSON(event.responseText);
+            if (typeof(JSON.children) == 'object') {
+                parseData(JSON);
+            }
         });
     };
 
@@ -80,11 +84,9 @@
 
 
 
-
-
 $(function () {
 
-    /* bind id's or templates to icons */
+    /* bind page id's or templates to icons */
     var templates = {
         'basic-page': 'fa-file-text',
         'admin'     : 'fa-cog',
