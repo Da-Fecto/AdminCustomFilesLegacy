@@ -19,7 +19,7 @@
 
 
         if ($fields.parent('.LanguageSupport').length) {
-            var $fields = $("#langTabs_Inputfield_" + name ).find("input, textarea");
+            $fields = $("[id^='Inputfield_" + name + "']");
         }
 
         $fields.after("<span class='" + settings.class + "'></span>");
