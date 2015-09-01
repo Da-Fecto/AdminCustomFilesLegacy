@@ -8,7 +8,7 @@
 
 ---
 
-### Instal
+### Install
 
 
 1. Add ProcessPageEditAutocompleteImageTags.js and ProcessPageEditAutocompleteImageTags.css to your 'AdminCustomFiles' folder.
