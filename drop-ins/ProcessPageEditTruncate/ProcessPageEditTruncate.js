@@ -44,10 +44,13 @@
 }(jQuery));
 
 
+/**
+ * Configure your fields
+ *
+ */
 
-// DOM is ready
 $(function () {
-    // field with the name attribute title
+
     $("[name='title']").truncate({
         characters: 64,
         prefix: 'To go: ',

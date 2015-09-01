@@ -324,7 +324,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
 
     public function ___uninstall() {
         if (is_dir($this->config->paths->templates . $this->files_folder)) {
-            $this->error(sprintf($this->_("You may remove the folder /site/templates/%s/ manually."), $this->files_folder));
+            $this->message(sprintf($this->_("You may remove the folder /site/templates/%s/ manually."), $this->files_folder));
         }
     }
 
@@ -408,9 +408,9 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
         $field = $this->modules->get('InputfieldText');
         $field->attr('name', 'files_folder');
         $field->label = $this->_('Place dynamic styles & scripts in this folder');
-        $description = $this->_('- Name the files accordingly to the “running process name” and use .css or .js as extension.');
+        $description = $this->_('- Start the filenames with the “running process name” and use .css or .js as extension.');
         $description .= "\n";
-        $description .= $this->_('- For the ProcessPageEdit process you could additionally add files with the template-name ending with .js and/or .css');
+        $description .= $this->_('- For the ProcessPageEdit process you could additionally add files starting with the template-name ending with .js and/or .css');
         $description .= "\n";
         $description .= $this->_('- The process must be enabled here in the settings.');
         $description .= "\n";

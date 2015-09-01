@@ -82,7 +82,10 @@
 })(jQuery);
 
 
-
+/**
+ * Configure your icons
+ *
+ */
 
 $(function () {
 
