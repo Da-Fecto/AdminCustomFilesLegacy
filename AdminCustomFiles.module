@@ -28,7 +28,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
     public static function getModuleInfo() {
         return array(
             'title' => 'Admin Custom Files',
-            'version' => '0.8.6',
+            'version' => '0.8.7',
             'author' => 'Martijn Geerts',
             'summary' => 'Add custom scripts & styles to the admin with optional dependencies',
             'singular' => true,
@@ -271,7 +271,10 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
                 'modifiedUser' => $page->modifiedUser->name,
             );
             $data['template'] = $this->template_name;
-            $data['fields'] = explode("|", $page->fields->implode('|', 'name'));
+            
+            if ($page->id) {
+                $data['fields'] = explode("|", $page->fields->implode('|', 'name'));
+            }            
         }
         $this->config->js($this->className(), $data);
     }
