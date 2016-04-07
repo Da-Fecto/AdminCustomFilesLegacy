@@ -6,54 +6,41 @@
  */
 
 (function ($) {
-    $.fn.truncate = function(options) {
+	$.fn.truncate = function(options) {
 
-        var $fields = this,
-            name = $fields.attr('name'),
-            settings = $.extend({
-                characters: 128,
-                prefix: '',
-                suffix: '',
-                class: 'notes'
-            }, options );
+		var $fields = this,
+			name = $fields.attr('name'),
+			settings = $.extend({
+				characters: 128,
+				prefix: '',
+				suffix: '',
+				class: 'notes'
+			}, options );
 
 
-        if ($fields.parent('.LanguageSupport').length) {
-            var $fields = $("#langTabs_Inputfield_" + name ).find("input, textarea");
-        }
+		if ($fields.parent('.LanguageSupport').length) {
+			var $fields = $("#langTabs_Inputfield_" + name ).find("input, textarea");
+		}
 
-        $fields.after("<span class='" + settings.class + "'></span>");
+		$fields.after("<span class='" + settings.class + "'></span>");
 
-        $fields.each(function (index, el) {
-            var truncate = function () {
-                var value = $(el).val(),
-                    typed = typeof value != 'undefined' ? value.length : 0,
-                    left = settings.characters - typed;
-                if (left < 0) {
-                    $(el).val(value.substr(0, settings.characters));
-                    truncate();
-                } else {
-                    $(el).next("span").text(settings.prefix + left + settings.suffix);
-                }
-            }
+		$fields.each(function (index, el) {
+			var truncate = function () {
+				var value = $(el).val(),
+					typed = typeof value != 'undefined' ? value.length : 0,
+					left = settings.characters - typed;
+				if (left < 0) {
+					$(el).val(value.substr(0, settings.characters));
+					truncate();
+				} else {
+					$(el).next("span").text(settings.prefix + left + settings.suffix);
+				}
+			}
 
-            $(el).keyup(function() { truncate(); });
-            return truncate();
-        });
-    };
+			$(el).keyup(function() { truncate(); });
+			truncate();
+		});
+
+		return this;
+	};
 }(jQuery));
-
-
-/**
- * Configure your fields
- *
- */
-
-$(function () {
-
-    $("[name='title']").truncate({
-        characters: 64,
-        prefix: 'To go: ',
-        suffix: ' characters'
-    });
-});
