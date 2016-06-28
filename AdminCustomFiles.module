@@ -28,7 +28,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
     public static function getModuleInfo() {
         return array(
             'title' => 'Admin Custom Files',
-            'version' => '0.8.7',
+            'version' => '0.8.8',
             'author' => 'Martijn Geerts',
             'summary' => 'Add custom scripts & styles to the admin with optional dependencies',
             'singular' => true,
@@ -296,15 +296,30 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
             );
         foreach ($files as $file) {
             if (strpos($file, '.css') !== false) {
+                if ($this->hash_files) $file = $this->createHash($file);
                 $this->config->styles->append($file);
             } else if (strpos($file, '.js') !== false) {
+                if ($this->hash_files) $file = $this->createHash($file);
                 $this->config->scripts->append($file);
             }
         }
     }
 
 
-
+    /**
+     *  Create hash
+     *
+     * @param string $file the original filename
+     * @return string the original filename with hash in the querystring
+     */
+     
+    protected function createHash($file) {
+        if (!$file) return;
+        return $file . "?v=" . hash_file('md5', $this->config->paths->root . $file);
+    }
+    
+    
+    
     /**
      * Create the AdminCustomFiles folder
      *
@@ -378,7 +393,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
             $field->addOption($name, "$name, ($label)");
         }
         $field->attr('value', is_array($this->process_filter) ? $this->process_filter : array());
-        $field->columnWidth = ($theme ? 33 : 50);
+        $field->columnWidth = ($theme ? 25 : 33);
         $inputfields->add($field);
 
         // js_config
@@ -390,7 +405,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
         $field->notes = $this->_("Tip: console.log(config.AdminCustomFiles)");
         $field->attr('value', $this->js_config);
         $field->attr('checked', $this->js_config);
-        $field->columnWidth = ($theme ? 33 : 50);
+        $field->columnWidth = ($theme ? 25 : 33);
         $inputfields->add($field);
 
         // theme_files
@@ -403,9 +418,21 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
             $field->notes = $this->_("e.g. AdminThemeReno.js and/or AdminThemeReno.css");
             $field->attr('value', $this->theme_files);
             $field->attr('checked', $this->theme_files);
-            $field->columnWidth = 34;
+            $field->columnWidth = 25;
             $inputfields->add($field);
         }
+
+        // hash_files
+        $field = $this->modules->get('InputfieldCheckbox');
+        $field->attr('name', 'hash_files');
+        $field->set('skipLabel', Inputfield::skipLabelFor);
+        $field->label = $this->_('Hash');
+        $field->label2 = $this->_('Create hash to prevent browser caching');
+        $field->notes = $this->_("e.g. Filename.css?v=e42e70201b4e75e678e8aa56eb78523c");
+        $field->attr('value', $this->hash_files);
+        $field->attr('checked', $this->hash_files);
+        $field->columnWidth = ($theme ? 25 : 33);
+        $inputfields->add($field);
 
         // files_folder
         $field = $this->modules->get('InputfieldText');
