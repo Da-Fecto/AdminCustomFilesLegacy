@@ -296,15 +296,30 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
             );
         foreach ($files as $file) {
             if (strpos($file, '.css') !== false) {
+                if ($this->hash_files) $file = $this->createHash($file);
                 $this->config->styles->append($file);
             } else if (strpos($file, '.js') !== false) {
+                if ($this->hash_files) $file = $this->createHash($file);
                 $this->config->scripts->append($file);
             }
         }
     }
 
 
-
+    /**
+     *  Append hash
+     *
+     * @param string $file the original filename
+     * @return string the original filename with hash in the querystring
+     */
+     
+    protected function createHash($file) {
+        if (!$file) return;
+        return $file . "?v=" . hash_file('md5', $this->config->paths->root . $file);
+    }
+    
+    
+    
     /**
      * Create the AdminCustomFiles folder
      *
