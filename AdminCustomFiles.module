@@ -307,7 +307,7 @@ class AdminCustomFiles extends WireData implements Module, ConfigurableModule {
 
 
     /**
-     *  Append hash
+     *  Create hash
      *
      * @param string $file the original filename
      * @return string the original filename with hash in the querystring
